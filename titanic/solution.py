@@ -1,5 +1,6 @@
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
 
 
 # STEP 1: GET THE DATA
@@ -90,17 +91,21 @@ for dataset in data_cleaner:
 #define y variable aka target/outcome
 Target = ['Survived']
 
-#define x variables for original features aka feature selection
+# define x variables for original features aka feature selection
 train_data_x = ['Sex','Pclass', 'Embarked', 'Title','SibSp', 'Parch', 'Age', 'Fare', 'FamilySize', 'IsAlone'] #pretty name/values for charts
 train_data_x_calc = ['Sex_Code','Pclass', 'Embarked_Code', 'Title_Code','SibSp', 'Parch', 'Age', 'Fare'] #coded for algorithm calculation
-train_data_xy =  Target + train_data_x
+train_data_xy =  Target + train_data_x 
 
 
-#define x variables for original w/bin features to remove continuous variables
+# define x variables for original w/bin features to remove continuous variables
+# i.e using 'AgeBin_Code' instead of 'Age' and 'FareBin_Code' instead of 'Fare'
 train_data_x_bin = ['Sex_Code','Pclass', 'Embarked_Code', 'Title_Code', 'FamilySize', 'AgeBin_Code', 'FareBin_Code']
 train_data_xy_bin = Target + train_data_x_bin
 
-#define x and y variables for dummy features original
+# define x and y variables for dummy features original
+# will get the dummies for categorical features by using OneHotEncoding
 train_data_dummy = pd.get_dummies(train_data[train_data_x])
 train_data_x_dummy = train_data_dummy.columns.tolist()
 train_data_xy_dummy = Target + train_data_x_dummy
+
+# we next split the training data into training and testing set to avoid overfitting by the model
