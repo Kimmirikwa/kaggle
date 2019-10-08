@@ -1,7 +1,9 @@
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, ShuffleSplit, cross_validate
 
+#Common Model Algorithms
+from sklearn import svm, tree, linear_model, neighbors, naive_bayes, ensemble, discriminant_analysis, gaussian_process
 
 # STEP 1: GET THE DATA
 train_data_raw = pd.read_csv("data/train.csv")
@@ -111,10 +113,88 @@ train_data_xy_dummy = Target + train_data_x_dummy
 # we next split the training data into training and testing set to avoid overfitting by the model
 
 # splitting the data with original features plus categorical features encoded using label encoder
-train_data_x, test_data_x, train_data_y, test_data_y = train_test_split(train_data[train_data_x_calc], train_data[Target])
+train_data_x, test_data_x, train_data_y, test_data_y = train_test_split(train_data[train_data_x_calc], train_data[Target], random_state=0)
 
 # splitting the data with original features plus categorical features encoded using label encoder and 'Age' and 'Fare' in bins
-train_data_bin_x, test_data_bin_x, train_data_bin_y, test_data_bin_y = train_test_split(train_data[train_data_xy_bin], train_data[Target])
+train_data_bin_x, test_data_bin_x, train_data_bin_y, test_data_bin_y = train_test_split(train_data[train_data_xy_bin], train_data[Target], random_state=0)
 
 # splitting the data with original features plus categorical features encoded using OneHotEncoding
-train_data_dummy_x, test_data_dummy_x, train_data_dummy_y, test_data_dummy_y = train_test_split(train_data_dummy[train_data_x_dummy], train_data[Target])
+train_data_dummy_x, test_data_dummy_x, train_data_dummy_y, test_data_dummy_y = train_test_split(train_data_dummy[train_data_x_dummy], train_data[Target], random_state=0)
+
+#Machine Learning Algorithm (MLA) Selection and Initialization
+MLA = [
+    #Ensemble Methods
+    ensemble.AdaBoostClassifier(),
+    ensemble.BaggingClassifier(),
+    ensemble.ExtraTreesClassifier(),
+    ensemble.GradientBoostingClassifier(),
+    ensemble.RandomForestClassifier(),
+
+    #Gaussian Processes
+    gaussian_process.GaussianProcessClassifier(),
+    
+    #GLM
+    linear_model.LogisticRegressionCV(),
+    linear_model.PassiveAggressiveClassifier(),
+    linear_model.RidgeClassifierCV(),
+    linear_model.SGDClassifier(),
+    linear_model.Perceptron(),
+
+    #Navies Bayes
+    naive_bayes.BernoulliNB(),
+    naive_bayes.GaussianNB(),
+    
+    #Nearest Neighbor
+    neighbors.KNeighborsClassifier(),
+    
+    #SVM
+    svm.SVC(probability=True),
+    svm.NuSVC(probability=True),
+    svm.LinearSVC(),
+    
+    #Trees    
+    tree.DecisionTreeClassifier(),
+    tree.ExtraTreeClassifier(),
+    
+    #Discriminant Analysis
+    discriminant_analysis.LinearDiscriminantAnalysis(),
+    discriminant_analysis.QuadraticDiscriminantAnalysis(),   
+]
+
+cv_split = ShuffleSplit(n_splits=10, test_size=.3, train_size=.6, random_state=0 )
+
+# create table to compare MLA metrics
+MLA_columns = ['MLA Name', 'MLA Parameters','MLA Train Accuracy Mean', 'MLA Test Accuracy Mean', 'MLA Test Accuracy 3*STD' ,'MLA Time']
+MLA_compare = pd.DataFrame(columns = MLA_columns)
+
+# create table to compare MLA predictions
+MLA_predict = train_data[Target]
+
+#index through MLA and save performance to table
+row_index = 0
+for alg in MLA:
+
+    # set name and parameters
+    MLA_name = alg.__class__.__name__
+    MLA_compare.loc[row_index, 'MLA Name'] = MLA_name
+    MLA_compare.loc[row_index, 'MLA Parameters'] = str(alg.get_params())
+    
+    # score model with cross validation: http://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html#sklearn.model_selection.cross_validate
+    cv_results = cross_validate(alg, train_data[train_data_x_bin], train_data[Target], cv=cv_split, return_train_score=True)
+
+    MLA_compare.loc[row_index, 'MLA Time'] = cv_results['fit_time'].mean()
+    MLA_compare.loc[row_index, 'MLA Train Accuracy Mean'] = cv_results['train_score'].mean()
+    MLA_compare.loc[row_index, 'MLA Test Accuracy Mean'] = cv_results['test_score'].mean()   
+    # if this is a non-bias random sample, then +/-3 standard deviations (std) from the mean, should statistically capture 99.7% of the subsets
+    MLA_compare.loc[row_index, 'MLA Test Accuracy 3*STD'] = cv_results['test_score'].std()*3   #let's know the worst that can happen!
+    
+
+    # save MLA predictions - see section 6 for usage
+    alg.fit(train_data[train_data_x_bin], train_data[Target])
+    MLA_predict[MLA_name] = alg.predict(train_data[train_data_x_bin])
+    
+    row_index += 1
+
+MLA_compare.sort_values(by = ['MLA Test Accuracy Mean'], ascending = False, inplace = True)
+
+MLA_compare[['MLA Name', 'MLA Train Accuracy Mean', 'MLA Test Accuracy Mean']].to_csv('results/scores.csv')
