@@ -1,6 +1,7 @@
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import train_test_split, ShuffleSplit, cross_validate
+from sklearn.model_selection import train_test_split, ShuffleSplit, cross_validate, GridSearchCV
+from sklearn.metrics import accuracy_score
 
 #Common Model Algorithms
 from sklearn import svm, tree, linear_model, neighbors, naive_bayes, ensemble, discriminant_analysis, gaussian_process
@@ -214,3 +215,25 @@ for dataset in training_data:
 
 	# the scores of the algorithms for the 3 datasets is in the results folder
 	MLA_compare[['MLA Name', 'MLA Train Accuracy Mean', 'MLA Test Accuracy Mean']].to_csv('results/{}'.format(dataset['file_name']))
+
+# using a randomforest classifier to do the predictions on the test data for now
+# this is just the first trial! more improvements to come
+rfc = ensemble.RandomForestClassifier(n_jobs=-1, max_features='sqrt', n_estimators=50, oob_score=True)
+param_grid = { 
+    'n_estimators': [5, 10, 15],
+    'max_features': ['auto', 'sqrt', 'log2']
+}
+CV_rfc = GridSearchCV(estimator=rfc, param_grid=param_grid, cv=5, return_train_score=True)
+CV_rfc.fit(train_data[train_data_x_bin], train_data[Target])
+
+print('AFTER DT RFC Tuned Parameters: ', CV_rfc.best_params_)
+print("AFTER DT RFC Tuned Training w/bin score mean: {:.2f}". format(CV_rfc.cv_results_['mean_train_score'][CV_rfc.best_index_]*100))
+print("AFTER DT RFC Tuned Test w/bin score mean: {:.2f}". format(CV_rfc.cv_results_['mean_test_score'][CV_rfc.best_index_]*100))
+
+best_classifier = CV_rfc.best_estimator_
+best_classifier.fit(train_data[train_data_x_bin], train_data[Target])
+pred_training = best_classifier.predict(train_data[train_data_x_bin])
+
+test_data['Survived'] = best_classifier.predict(test_data[train_data_x_bin])
+submit = test_data[['PassengerId', 'Survived']]
+submit.to_csv('output/sumit.csv', index=False)
