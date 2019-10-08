@@ -197,4 +197,4 @@ for alg in MLA:
 
 MLA_compare.sort_values(by = ['MLA Test Accuracy Mean'], ascending = False, inplace = True)
 
-MLA_compare[['MLA Name', 'MLA Train Accuracy Mean', 'MLA Test Accuracy Mean']].to_csv('results/scores.csv')
+MLA_compare[['MLA Name', 'MLA Train Accuracy Mean', 'MLA Test Accuracy Mean']].to_csv('results/scores_with_bins.csv')
