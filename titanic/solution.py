@@ -53,8 +53,8 @@ for dataset in data_cleaner:
 
 	# somebody was alone if there was no family member onboard
 	# 1 indicates somebody was alone and 0 had a family member present
-	dataset['isAlone'] = 1
-	dataset['isAlone'].loc[dataset['FamilySize'] > 1] = 0
+	dataset['IsAlone'] = 1
+	dataset['IsAlone'].loc[dataset['FamilySize'] > 1] = 0
 
 	# create 'Title' from names
 	# for example 'Braund, Mr. Owen Harris' will have a title of 'Mr'
@@ -99,3 +99,8 @@ train_data_xy =  Target + train_data_x
 #define x variables for original w/bin features to remove continuous variables
 train_data_x_bin = ['Sex_Code','Pclass', 'Embarked_Code', 'Title_Code', 'FamilySize', 'AgeBin_Code', 'FareBin_Code']
 train_data_xy_bin = Target + train_data_x_bin
+
+#define x and y variables for dummy features original
+train_data_dummy = pd.get_dummies(train_data[train_data_x])
+train_data_x_dummy = train_data_dummy.columns.tolist()
+train_data_xy_dummy = Target + train_data_x_dummy
