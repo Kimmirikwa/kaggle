@@ -205,8 +205,8 @@ for dataset in training_data:
 	    
 
 	    # save MLA predictions - see section 6 for usage
-	    alg.fit(train_data[train_data_x_bin], train_data[Target])
-	    MLA_predict[MLA_name] = alg.predict(train_data[train_data_x_bin])
+	    alg.fit(dataset['data'], train_data[Target])
+	    MLA_predict[MLA_name] = alg.predict(dataset['data'])
 	    
 	    row_index += 1
 
