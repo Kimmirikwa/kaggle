@@ -60,7 +60,14 @@ for dataset in data_cleaner:
 	dataset['Title'] = dataset['Name'].str.split(", ", expand=True)[1].str.split(".", expand=True)[0]
 
 	# put 'Fare' and 'Age' to 4 and 5 bins respectively
-	data['FareBin'] = pd.qcut(dataset['Fare'], 4)  # all bins will have the same number of itesm
+	dataset['FareBin'] = pd.qcut(dataset['Fare'], 4)  # all bins will have the same number of itesm
 
-	data['AgeBin'] = pd.cut(dataset['Age'], 5)  # all bins will have the same range, number of items per bin will depend on the distribution of age
+	dataset['AgeBin'] = pd.cut(dataset['Age'], 5)  # all bins will have the same range, number of items per bin will depend on the distribution of age
 
+
+# clean up titles with count of less than 10, they will be grouped into one group called 'Misc'
+stat_min = 10
+title_names = (train_data['Title'].value_counts() < stat_min)  # series of 'True' if count if greater than 10 and vice versa
+
+# use the series to attempt to rename rare titles
+train_data['Title'] = train_data['Title'].apply(lambda x: 'Misc' if title_names.loc[x] == True else x)
