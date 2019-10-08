@@ -109,3 +109,12 @@ train_data_x_dummy = train_data_dummy.columns.tolist()
 train_data_xy_dummy = Target + train_data_x_dummy
 
 # we next split the training data into training and testing set to avoid overfitting by the model
+
+# splitting the data with original features plus categorical features encoded using label encoder
+train_data_x, test_data_x, train_data_y, test_data_y = train_test_split(train_data[train_data_x_calc], train_data[Target])
+
+# splitting the data with original features plus categorical features encoded using label encoder and 'Age' and 'Fare' in bins
+train_data_bin_x, test_data_bin_x, train_data_bin_y, test_data_bin_y = train_test_split(train_data[train_data_xy_bin], train_data[Target])
+
+# splitting the data with original features plus categorical features encoded using OneHotEncoding
+train_data_dummy_x, test_data_dummy_x, train_data_dummy_y, test_data_dummy_y = train_test_split(train_data_dummy[train_data_x_dummy], train_data[Target])
