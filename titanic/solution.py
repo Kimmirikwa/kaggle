@@ -58,3 +58,9 @@ for dataset in data_cleaner:
 	# create 'Title' from names
 	# for example 'Braund, Mr. Owen Harris' will have a title of 'Mr'
 	dataset['Title'] = dataset['Name'].str.split(", ", expand=True)[1].str.split(".", expand=True)[0]
+
+	# put 'Fare' and 'Age' to 4 and 5 bins respectively
+	data['FareBin'] = pd.qcut(dataset['Fare'], 4)  # all bins will have the same number of itesm
+
+	data['AgeBin'] = pd.cut(dataset['Age'], 5)  # all bins will have the same range, number of items per bin will depend on the distribution of age
+
