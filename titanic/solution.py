@@ -36,11 +36,25 @@ print(test_data.isnull().sum())  # 'Age': 86, 'Cabin': 327, 'Fare': 1
 # 'Cabin' has so many missing values, we will therefore drop the column
 
 # fill missing values
-for data in data_cleaner:
-	data['Age'].fillna(data['Age'].median(), inplace=True)
-	data['Fare'].fillna(data['Fare'].median(), inplace=True)
-	data['Embarked'].fillna(data['Embarked'].mode(), inplace=True)
+for dataset in data_cleaner:
+	dataset['Age'].fillna(dataset['Age'].median(), inplace=True)
+	dataset['Fare'].fillna(dataset['Fare'].median(), inplace=True)
+	dataset['Embarked'].fillna(dataset['Embarked'].mode(), inplace=True)
 
 # dropping 'Cabin' and other features that are not important
 columns_to_drop = ['PassengerId', 'Cabin', 'Ticket']
 train_data.drop(columns_to_drop, axis=1, inplace=True)
+
+# 2.3 Creating new features i.e feature engineering
+for dataset in data_cleaner:
+	# the family size is the number of family members plus the individual
+	dataset['FamilySize'] = dataset['SibSp'] + dataset['Parch'] + 1
+
+	# somebody was alone if there was no family member onboard
+	# 1 indicates somebody was alone and 0 had a family member present
+	dataset['isAlone'] = 1
+	dataset['isAlone'].loc[dataset['FamilySize'] > 1] = 0
+
+	# create 'Title' from names
+	# for example 'Braund, Mr. Owen Harris' will have a title of 'Mr'
+	dataset['Title'] = dataset['Name'].str.split(", ", expand=True)[1].str.split(".", expand=True)[0]
