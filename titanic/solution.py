@@ -1,4 +1,5 @@
 import pandas as pd
+from sklearn.preprocessing import LabelEncoder
 
 
 # STEP 1: GET THE DATA
@@ -39,13 +40,13 @@ print(test_data.isnull().sum())  # 'Age': 86, 'Cabin': 327, 'Fare': 1
 for dataset in data_cleaner:
 	dataset['Age'].fillna(dataset['Age'].median(), inplace=True)
 	dataset['Fare'].fillna(dataset['Fare'].median(), inplace=True)
-	dataset['Embarked'].fillna(dataset['Embarked'].mode(), inplace=True)
+	dataset['Embarked'].fillna(dataset['Embarked'].mode()[0], inplace=True)
 
 # dropping 'Cabin' and other features that are not important
 columns_to_drop = ['PassengerId', 'Cabin', 'Ticket']
 train_data.drop(columns_to_drop, axis=1, inplace=True)
 
-# 2.3 Creating new features i.e feature engineering
+# 3. CREATING NEW FEATURES i.e feature engineering
 for dataset in data_cleaner:
 	# the family size is the number of family members plus the individual
 	dataset['FamilySize'] = dataset['SibSp'] + dataset['Parch'] + 1
@@ -71,3 +72,30 @@ title_names = (train_data['Title'].value_counts() < stat_min)  # series of 'True
 
 # use the series to attempt to rename rare titles
 train_data['Title'] = train_data['Title'].apply(lambda x: 'Misc' if title_names.loc[x] == True else x)
+
+
+# 4. CONVERTING FEATURES
+# converting categorical features to numerical types.
+
+# using label encoder to encode categorical values to values between 0 and n_classes - 1
+
+encoder = LabelEncoder()
+for dataset in data_cleaner:
+	dataset['Sex_Code'] = encoder.fit_transform(dataset['Sex'])
+	dataset['Embarked_Code'] = encoder.fit_transform(dataset['Embarked'])
+	dataset['Title_Code'] = encoder.fit_transform(dataset['Title'])
+	dataset['AgeBin_Code'] = encoder.fit_transform(dataset['AgeBin'])
+	dataset['FareBin_Code'] = encoder.fit_transform(dataset['FareBin'])
+
+#define y variable aka target/outcome
+Target = ['Survived']
+
+#define x variables for original features aka feature selection
+train_data_x = ['Sex','Pclass', 'Embarked', 'Title','SibSp', 'Parch', 'Age', 'Fare', 'FamilySize', 'IsAlone'] #pretty name/values for charts
+train_data_x_calc = ['Sex_Code','Pclass', 'Embarked_Code', 'Title_Code','SibSp', 'Parch', 'Age', 'Fare'] #coded for algorithm calculation
+train_data_xy =  Target + train_data_x
+
+
+#define x variables for original w/bin features to remove continuous variables
+train_data_x_bin = ['Sex_Code','Pclass', 'Embarked_Code', 'Title_Code', 'FamilySize', 'AgeBin_Code', 'FareBin_Code']
+train_data_xy_bin = Target + train_data_x_bin
