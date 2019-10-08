@@ -212,4 +212,5 @@ for dataset in training_data:
 
 	MLA_compare.sort_values(by = ['MLA Test Accuracy Mean'], ascending = False, inplace = True)
 
+	# the scores of the algorithms for the 3 datasets is in the results folder
 	MLA_compare[['MLA Name', 'MLA Train Accuracy Mean', 'MLA Test Accuracy Mean']].to_csv('results/{}'.format(dataset['file_name']))
